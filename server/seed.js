@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import { config } from './config.js'
 import { db } from './db.js'
 import { slugify } from './lib/validate.js'
+import { servicePackages } from '../src/data.js'
 
 const courses = [
   {
@@ -36,12 +37,7 @@ const courses = [
   }
 ]
 
-const projects = [
-  { title: 'CampusCart', type: 'FULL-STACK / E-COMMERCE', description: 'A marketplace for students to buy, sell and discover useful campus essentials.', tags: ['React', 'Node.js', 'PostgreSQL'], color: '#b8ff3d' },
-  { title: 'Pulseboard', type: 'DATA / VISUALIZATION', description: 'Real-time data dashboard that turns messy metrics into confident decisions.', tags: ['Next.js', 'D3.js', 'Supabase'], color: '#9dd8ff' },
-  { title: 'Nourish', type: 'MOBILE / HEALTH', description: 'A mindful nutrition companion designed around small, sustainable habits.', tags: ['React Native', 'Firebase', 'Figma'], color: '#f5b1d5' },
-  { title: 'Routewise', type: 'AI / LOGISTICS', description: 'Smarter campus routes using constraint-aware optimization and delightful maps.', tags: ['Python', 'FastAPI', 'Maps API'], color: '#ffd27a' }
-]
+const projects = servicePackages.map(({ title, type, description, tags, color }) => ({ title, type, description, tags, color }))
 
 function seedAdmin() {
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(config.seedAdmin.email)

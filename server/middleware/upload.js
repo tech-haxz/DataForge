@@ -22,6 +22,12 @@ function fileFilter(req, file, cb) {
   cb(null, true)
 }
 
+export const uploadThumbnail = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: config.maxUploadBytes, files: 1 }
+}).single('thumbnail')
+
 export const uploadVideo = multer({
   storage,
   fileFilter,

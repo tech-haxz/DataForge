@@ -3,7 +3,7 @@ import { ArrowUpRight, LayoutDashboard, LogOut, Menu, Shield, X } from 'lucide-r
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../context/AuthContext'
 
-const links = [['What we do', '/'], ['Projects', '/projects'], ['Courses', '/courses'], ['Mentorship', '/mentorship']]
+const links = [['What we do', '/'], ['Services', '/projects'], ['Courses', '/courses'], ['Mentorship', '/mentorship']]
 
 export default function Navbar({ menuOpen, setMenuOpen }) {
   const { user, isStaff, logout } = useAuth()
@@ -19,8 +19,8 @@ export default function Navbar({ menuOpen, setMenuOpen }) {
 
   return <header className="fixed inset-x-0 top-0 z-50 border-b border-line/70 bg-canvas/80 backdrop-blur-xl">
     <div className="container flex h-[72px] items-center justify-between">
-      <Link to="/" className="text-lg font-extrabold tracking-tight" onClick={() => setMenuOpen(false)}>
-        coding<span className="text-lime">mindset</span><span className="ml-1 text-lime">.</span>
+      <Link to="/" className="text-3xl font-extrabold tracking-tight" onClick={() => setMenuOpen(false)}>
+        Data<span className="text-lime">Forge</span><span className="ml-1 text-lime"></span>
       </Link>
 
       <nav className="hidden items-center gap-7 text-sm font-medium md:flex">

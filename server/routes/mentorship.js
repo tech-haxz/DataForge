@@ -13,12 +13,13 @@ const submitLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 10, standardH
 router.post('/', submitLimiter, asyncHandler(async (req, res) => {
   const data = validate(req.body, {
     email: { type: 'email', required: true },
+    phone: { type: 'string', max: 40 },
     focus: { type: 'string', max: 120 },
     message: { type: 'string', max: 2000 }
   })
 
-  const info = db.prepare('INSERT INTO mentorship_requests (user_id, email, focus, message) VALUES (?, ?, ?, ?)')
-    .run(req.user?.id ?? null, data.email, data.focus ?? '', data.message ?? '')
+  const info = db.prepare('INSERT INTO mentorship_requests (user_id, email, phone, focus, message) VALUES (?, ?, ?, ?, ?)')
+    .run(req.user?.id ?? null, data.email, data.phone ?? '', data.focus ?? '', data.message ?? '')
 
   res.status(201).json({ request: toRequest(db.prepare('SELECT * FROM mentorship_requests WHERE id = ?').get(info.lastInsertRowid)) })
 }))
