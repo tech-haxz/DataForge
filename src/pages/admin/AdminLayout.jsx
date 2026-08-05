@@ -7,7 +7,7 @@ const links = [
   ['Courses', '/admin/courses', LayoutDashboard, false],
   ['Videos', '/admin/videos', PlaySquare, false],
   ['Users', '/admin/users', Users, false],
-  ['Projects', '/admin/projects', FolderKanban, false],
+  ['Services', '/admin/projects', FolderKanban, false],
   ['Mentorship', '/admin/mentorship', MessageSquare, false]
 ]
 

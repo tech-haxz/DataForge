@@ -1,9 +1,13 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { Router } from 'express'
+import { config } from '../config.js'
 import { db } from '../db.js'
 import { ApiError, asyncHandler } from '../lib/errors.js'
 import { validate } from '../lib/validate.js'
 import { toProject } from '../lib/serialize.js'
 import { requireStaff } from '../middleware/auth.js'
+import { uploadThumbnail } from '../middleware/upload.js'
 
 const router = Router()
 
@@ -42,6 +46,31 @@ router.post('/', requireStaff, asyncHandler(async (req, res) => {
   res.status(201).json({ project: toProject(db.prepare('SELECT * FROM projects WHERE id = ?').get(info.lastInsertRowid)) })
 }))
 
+router.get('/:id/thumbnail', asyncHandler(async (req, res) => {
+  const project = db.prepare('SELECT thumbnail FROM projects WHERE id = ?').get(req.params.id)
+  if (!project?.thumbnail) throw ApiError.notFound('Project thumbnail not found')
+  const thumbnailDir = path.resolve(config.thumbDir)
+  const filePath = path.resolve(thumbnailDir, project.thumbnail)
+  if (!filePath.startsWith(`${thumbnailDir}${path.sep}`) || !fs.existsSync(filePath)) {
+    throw ApiError.notFound('Project thumbnail is missing from storage')
+  }
+  res.sendFile(filePath)
+}))
+
+router.post('/:id/thumbnail', requireStaff, uploadThumbnail, asyncHandler(async (req, res) => {
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id)
+  if (!project) throw ApiError.notFound('Project not found')
+  if (!req.file) throw ApiError.badRequest('Select an image to upload')
+
+  db.prepare('UPDATE projects SET thumbnail = ? WHERE id = ?').run(req.file.filename, project.id)
+  if (project.thumbnail) {
+    const thumbnailDir = path.resolve(config.thumbDir)
+    const previous = path.resolve(thumbnailDir, project.thumbnail)
+    if (previous.startsWith(`${thumbnailDir}${path.sep}`)) fs.rmSync(previous, { force: true })
+  }
+  res.json({ project: toProject(db.prepare('SELECT * FROM projects WHERE id = ?').get(project.id)) })
+}))
+
 router.patch('/:id', requireStaff, asyncHandler(async (req, res) => {
   const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id)
   if (!project) throw ApiError.notFound('Project not found')
@@ -64,8 +93,14 @@ router.patch('/:id', requireStaff, asyncHandler(async (req, res) => {
 }))
 
 router.delete('/:id', requireStaff, asyncHandler(async (req, res) => {
+  const project = db.prepare('SELECT thumbnail FROM projects WHERE id = ?').get(req.params.id)
   const info = db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id)
   if (!info.changes) throw ApiError.notFound('Project not found')
+  if (project?.thumbnail) {
+    const thumbnailDir = path.resolve(config.thumbDir)
+    const filePath = path.resolve(thumbnailDir, project.thumbnail)
+    if (filePath.startsWith(`${thumbnailDir}${path.sep}`)) fs.rmSync(filePath, { force: true })
+  }
   res.json({ ok: true })
 }))
 

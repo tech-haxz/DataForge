@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { FolderKanban, Pencil, Plus, Trash2 } from 'lucide-react'
-import { api } from '../../lib/api'
+import { api, uploadProjectThumbnail } from '../../lib/api'
 import { Alert, EmptyState, Field, Modal, Spinner, StatusPill } from '../../components/ui'
 
-const blank = { title: '', type: 'FULL-STACK', description: '', tags: '', color: '#b8ff3d', demoUrl: '', reportUrl: '', status: 'published' }
+const blank = { title: '', type: 'FULL-STACK', description: '', tags: '', color: '#b8ff3d', demoUrl: '', reportUrl: '', status: 'published', hasThumbnail: false }
 
 export default function AdminProjects() {
   const [projects, setProjects] = useState([])
@@ -34,16 +34,16 @@ export default function AdminProjects() {
   return <div>
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 className="text-xl font-semibold">Student work</h2>
-        <p className="text-sm text-muted">{projects.length} projects in the library</p>
+        <h2 className="text-xl font-semibold">Services</h2>
+        <p className="text-sm text-muted">{projects.length} services in the library</p>
       </div>
-      <button className="btn-primary px-4 py-2 text-sm" onClick={() => setEditing(blank)}><Plus size={16} /> New project</button>
+      <button className="btn-primary px-4 py-2 text-sm" onClick={() => setEditing(blank)}><Plus size={16} /> New service</button>
     </header>
 
     {error && <div className="mt-5"><Alert>{error}</Alert></div>}
 
     {loading ? <p className="mt-8 flex items-center gap-2 text-muted"><Spinner /> Loading…</p>
-      : projects.length === 0 ? <div className="mt-6"><EmptyState icon={FolderKanban} title="No projects yet">Showcase the work your students ship.</EmptyState></div>
+      : projects.length === 0 ? <div className="mt-6"><EmptyState icon={FolderKanban} title="No services yet">Create a service package for your students.</EmptyState></div>
         : <div className="mt-6 grid gap-4 md:grid-cols-2">
           {projects.map(project => <article key={project.id} className="card">
             <div className="flex items-start justify-between gap-3">
@@ -74,6 +74,7 @@ function ProjectForm({ project, onClose, onSaved }) {
   const [error, setError] = useState('')
   const [details, setDetails] = useState({})
   const [busy, setBusy] = useState(false)
+  const [thumbnail, setThumbnail] = useState(null)
 
   const set = key => event => setForm(f => ({ ...f, [key]: event.target.value }))
 
@@ -93,8 +94,10 @@ function ProjectForm({ project, onClose, onSaved }) {
       status: form.status
     }
     try {
-      if (project.id) await api(`/projects/${project.id}`, { method: 'PATCH', body })
-      else await api('/projects', { method: 'POST', body })
+      const saved = project.id
+        ? await api(`/projects/${project.id}`, { method: 'PATCH', body })
+        : await api('/projects', { method: 'POST', body })
+      if (thumbnail) await uploadProjectThumbnail(saved.project.id, thumbnail)
       onSaved()
     } catch (err) {
       setError(err.message)
@@ -104,12 +107,15 @@ function ProjectForm({ project, onClose, onSaved }) {
     }
   }
 
-  return <Modal title={project.id ? 'Edit project' : 'New project'} onClose={onClose} wide>
+  return <Modal title={project.id ? 'Edit service' : 'New service'} onClose={onClose} wide>
     <form className="space-y-4" onSubmit={submit}>
       {error && <Alert>{error}</Alert>}
       <Field label="Title" error={details.title}><input className="field" value={form.title} onChange={set('title')} required /></Field>
       <Field label="Category" hint="shown in caps" error={details.type}><input className="field" value={form.type} onChange={set('type')} /></Field>
       <Field label="Description" error={details.description}><textarea className="field min-h-20 resize-none" value={form.description} onChange={set('description')} /></Field>
+      <Field label="Thumbnail" hint="optional · JPG, PNG, WebP, AVIF" error={details.thumbnail}>
+        <input className="field" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setThumbnail(event.target.files?.[0] || null)} />
+      </Field>
       <Field label="Tags" hint="comma separated" error={details.tags}><input className="field" value={form.tags} onChange={set('tags')} placeholder="React, Node.js, PostgreSQL" /></Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Demo URL" error={details.demoUrl}><input className="field" value={form.demoUrl} onChange={set('demoUrl')} placeholder="https://" /></Field>

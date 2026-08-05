@@ -64,6 +64,23 @@ export function uploadVideo(formData, { onProgress } = {}) {
   })
 }
 
+export async function uploadProjectThumbnail(projectId, file) {
+  const formData = new FormData()
+  formData.append('thumbnail', file)
+  const token = getToken()
+  const res = await fetch(`/api/projects/${projectId}/thumbnail`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData
+  })
+  const text = await res.text()
+  let data = {}
+  try { data = text ? JSON.parse(text) : {} } catch { data = { error: text } }
+  if (!res.ok) throw new ApiError(res.status, data.error || `Upload failed (${res.status})`, data.details)
+  return data
+}
+
 export const formatBytes = bytes => {
   if (!bytes) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB', 'TB']

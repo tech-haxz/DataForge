@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS projects (
   description TEXT    NOT NULL DEFAULT '',
   tags        TEXT    NOT NULL DEFAULT '[]',
   color       TEXT    NOT NULL DEFAULT '#b8ff3d',
+  thumbnail   TEXT,
   demo_url    TEXT    NOT NULL DEFAULT '',
   report_url  TEXT    NOT NULL DEFAULT '',
   status      TEXT    NOT NULL DEFAULT 'published' CHECK (status IN ('draft','published')),
@@ -85,6 +86,7 @@ CREATE TABLE IF NOT EXISTS mentorship_requests (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
   email      TEXT    NOT NULL,
+  phone      TEXT    NOT NULL DEFAULT '',
   focus      TEXT    NOT NULL DEFAULT '',
   message    TEXT    NOT NULL DEFAULT '',
   status     TEXT    NOT NULL DEFAULT 'new' CHECK (status IN ('new','contacted','closed')),
@@ -96,6 +98,14 @@ CREATE INDEX IF NOT EXISTS idx_enrollments_user   ON enrollments(user_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_course ON enrollments(course_id);
 CREATE INDEX IF NOT EXISTS idx_requests_status    ON mentorship_requests(status);
 `)
+
+// Keep existing local databases compatible with the current mentorship form.
+try { db.exec("ALTER TABLE mentorship_requests ADD COLUMN phone TEXT NOT NULL DEFAULT ''") } catch (error) {
+  if (!String(error.message).includes('duplicate column name')) throw error
+}
+try { db.exec("ALTER TABLE projects ADD COLUMN thumbnail TEXT") } catch (error) {
+  if (!String(error.message).includes('duplicate column name')) throw error
+}
 
 export const publicUser = row => row && {
   id: row.id,

@@ -9,7 +9,7 @@ const focuses = ['Product & strategy', 'Frontend engineering', 'Data & AI', 'Car
 
 export default function Mentorship() {
   const { user } = useAuth()
-  const [form, setForm] = useState({ focus: '', email: '', message: '' })
+  const [form, setForm] = useState({ focus: '', email: '', phone: '', message: '' })
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
   const [details, setDetails] = useState({})
@@ -71,6 +71,9 @@ export default function Mentorship() {
               </Field>
               <Field label="Your email" error={details.email}>
                 <input className="field" type="email" placeholder={user?.email || 'you@example.com'} value={form.email} onChange={set('email')} required={!user} />
+              </Field>
+              <Field label="Phone number" hint="Optional" error={details.phone}>
+                <input className="field" type="tel" inputMode="tel" autoComplete="tel" placeholder="e.g. +91 98765 43210" value={form.phone} onChange={set('phone')} />
               </Field>
               <Field label="Anything we should know?" error={details.message}>
                 <textarea className="field min-h-24 resize-none" placeholder="A little context helps..." value={form.message} onChange={set('message')} />

@@ -1,1 +1,32 @@
-export const projects = [{ title: 'CampusCart', type: 'FULL-STACK / E-COMMERCE', description: 'A marketplace for students to buy, sell and discover useful campus essentials.', tags: ['React', 'Node.js', 'PostgreSQL'], color: '#b8ff3d' }, { title: 'Pulseboard', type: 'DATA / VISUALIZATION', description: 'Real-time data dashboard that turns messy metrics into confident decisions.', tags: ['Next.js', 'D3.js', 'Supabase'], color: '#9dd8ff' }, { title: 'Nourish', type: 'MOBILE / HEALTH', description: 'A mindful nutrition companion designed around small, sustainable habits.', tags: ['React Native', 'Firebase', 'Figma'], color: '#f5b1d5' }, { title: 'Routewise', type: 'AI / LOGISTICS', description: 'Smarter campus routes using constraint-aware optimization and delightful maps.', tags: ['Python', 'FastAPI', 'Maps API'], color: '#ffd27a' }]
+export const servicePackages = [
+  {
+    title: 'Only Project',
+    type: 'PROJECT PACKAGE',
+    description: 'Get a complete, working project that turns your idea into portfolio-ready proof of your practical skills.',
+    tags: ['Working project', 'Portfolio-ready', 'Practical experience'],
+    color: '#b8ff3d'
+  },
+  {
+    title: 'Project + Report Only',
+    type: 'PROJECT + DOCUMENTATION',
+    description: 'Build a polished project and receive a structured report that clearly explains the problem, process, and results.',
+    tags: ['Working project', 'Detailed report', 'Clear presentation'],
+    color: '#9dd8ff'
+  },
+  {
+    title: 'Project + Report + Certificate',
+    type: 'COMPLETE PROOF PACKAGE',
+    description: 'Showcase credible proof of your skills with a finished project, professional report, and certificate of completion.',
+    tags: ['Working project', 'Detailed report', 'Certificate'],
+    color: '#f5b1d5'
+  },
+  {
+    title: 'Internship',
+    type: 'INTERNSHIP PACKAGE',
+    description: 'Gain end-to-end internship experience with an offer letter, project, report, certificate, and live plus recorded classes to support your growth.',
+    tags: ['Offer letter', 'Project + report', 'Certificate', 'Live + recorded classes'],
+    color: '#ffd27a'
+  }
+]
+
+export const projects = servicePackages
