@@ -1,4 +1,4 @@
-# CodingMindset
+# DataForge
 
 A full-stack learning platform: a React front end for the public site plus a Node/Express API with
 accounts, cohort enrollment, video upload and streaming, and an admin control room.
