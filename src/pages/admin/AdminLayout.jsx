@@ -29,7 +29,7 @@ export default function AdminLayout() {
           key={to}
           to={to}
           end={end}
-          className={({ isActive }) => `flex shrink-0 items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${isActive ? 'bg-lime text-[#10140e]' : 'text-muted hover:bg-panel hover:text-ink'}`}
+          className={({ isActive }) => `flex shrink-0 items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${isActive ? 'bg-lime text-[#061a35]' : 'text-muted hover:bg-panel hover:text-ink'}`}
         >
           <Icon size={16} /> {label}
         </NavLink>)}
