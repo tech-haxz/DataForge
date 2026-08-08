@@ -33,13 +33,6 @@ npm run dev                   # API on :4000, Vite on :5173
 Open http://localhost:5173. Vite proxies `/api` to the API, so the browser stays on one origin and
 the auth cookie works.
 
-Seeded accounts (change them before deploying):
-
-| Role    | Email                       | Password       |
-| ------- | --------------------------- | -------------- |
-| Admin   | `admin@codingmindset.dev`   | `ChangeMe123!` |
-| Student | `student@codingmindset.dev` | `Student123!`  |
-
 ### Production
 
 ```bash
