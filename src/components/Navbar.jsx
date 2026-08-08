@@ -2,7 +2,8 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ArrowUpRight, LayoutDashboard, LogOut, Menu, Shield, X } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../context/AuthContext'
-import logo from '../assets/opendoc-logo.jpg'
+import logo from '../assets/Opendoc-logo1.png'
+
 
 const links = [['What we do', '/'], ['Services', '/projects'], ['Courses', '/courses'], ['Mentorship', '/mentorship']]
 
@@ -22,6 +23,7 @@ export default function Navbar({ menuOpen, setMenuOpen }) {
     <div className="container flex h-[72px] items-center justify-between">
       <Link to="/" className="flex items-center" onClick={() => setMenuOpen(false)} aria-label="OpenDoc home">
         <img src={logo} alt="OpenDoc.in" className="h-14 w-auto max-w-[170px] object-contain" />
+        <h1 className="ml-2 text-2xl font-bold text-ink">Open<span className="text-primary text-[#1689EA]">Doc.</span>in</h1>
       </Link>
 
       <nav className="hidden items-center gap-7 text-sm font-medium md:flex">
