@@ -63,10 +63,10 @@ export default function Projects() {
         </div>}
 
     <Reveal>
-      <div className="mt-24 rounded-3xl border border-line bg-lime p-8 text-[#10140e] md:p-12">
+      <div className="mt-24 rounded-3xl border border-line bg-lime p-8 text-[#061a35] md:p-12">
         <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <div className="eyebrow !text-[#10140e]/60">START BUILDING</div>
+            <div className="eyebrow !text-[#061a35]/60">START BUILDING</div>
             <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">Your proof could be next.</h2>
           </div>
           <Link to="/courses" className="btn-dark">Find a starting point <ArrowRight size={16} /></Link>

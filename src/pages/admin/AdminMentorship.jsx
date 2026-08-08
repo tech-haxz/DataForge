@@ -52,7 +52,7 @@ export default function AdminMentorship() {
         {filters.map(value => <button
           key={value}
           onClick={() => setFilter(value)}
-          className={`rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${filter === value ? 'border-lime bg-lime text-[#10140e]' : 'border-line text-muted hover:text-ink'}`}
+          className={`rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${filter === value ? 'border-lime bg-lime text-[#061a35]' : 'border-line text-muted hover:text-ink'}`}
         >{value}</button>)}
       </div>
     </header>

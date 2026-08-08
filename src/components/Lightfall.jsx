@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 export default function Lightfall({
-  colors = ['#B8FF3D', '#FF5C96', '#B9A7FF'],
+  colors = ['#1689EA', '#65D6FF', '#B9A7FF'],
   backgroundColor = 'transparent',
   speed = 0.5,
   streakCount = 2,

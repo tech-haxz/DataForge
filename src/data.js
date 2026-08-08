@@ -4,7 +4,7 @@ export const servicePackages = [
     type: 'PROJECT PACKAGE',
     description: 'Get a complete, working project that turns your idea into portfolio-ready proof of your practical skills.',
     tags: ['Working project', 'Portfolio-ready', 'Practical experience'],
-    color: '#b8ff3d'
+    color: '#1689ea'
   },
   {
     title: 'Project + Report Only',

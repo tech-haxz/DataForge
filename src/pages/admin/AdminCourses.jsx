@@ -4,7 +4,7 @@ import { GraduationCap, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { api } from '../../lib/api'
 import { Alert, EmptyState, Field, Modal, Spinner, StatusPill } from '../../components/ui'
 
-const blank = { title: '', summary: '', description: '', level: 'Beginner-friendly', schedule: '', seats: 20, priceCents: 0, accent: '#b8ff3d', status: 'draft' }
+const blank = { title: '', summary: '', description: '', level: 'Beginner-friendly', schedule: '', seats: 20, priceCents: 0, accent: '#1689ea', status: 'draft' }
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState([])

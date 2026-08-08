@@ -3,7 +3,7 @@ import { FolderKanban, Pencil, Plus, Trash2 } from 'lucide-react'
 import { api, uploadProjectThumbnail } from '../../lib/api'
 import { Alert, EmptyState, Field, Modal, Spinner, StatusPill } from '../../components/ui'
 
-const blank = { title: '', type: 'FULL-STACK', description: '', tags: '', color: '#b8ff3d', demoUrl: '', reportUrl: '', status: 'published', hasThumbnail: false }
+const blank = { title: '', type: 'FULL-STACK', description: '', tags: '', color: '#1689ea', demoUrl: '', reportUrl: '', status: 'published', hasThumbnail: false }
 
 export default function AdminProjects() {
   const [projects, setProjects] = useState([])

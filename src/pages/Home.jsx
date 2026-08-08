@@ -43,7 +43,7 @@ export default function Home() {
                 <span className="text-lime">not promises.</span>
               </h1>
               <p className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
-                DataForge is where college students turn curiosity into
+                OpenDoc is where college students turn curiosity into
                 capability — through live learning, real projects, and people
                 who genuinely care.
               </p>
