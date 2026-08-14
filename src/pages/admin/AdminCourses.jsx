@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { GraduationCap, Pencil, Plus, Trash2, Users } from 'lucide-react'
+import { GraduationCap, Pencil, Plus, Trash2, Users, Check, Lock } from 'lucide-react'
 import { api } from '../../lib/api'
+import { useAuth } from '../../context/AuthContext'
 import { Alert, EmptyState, Field, Modal, Spinner, StatusPill } from '../../components/ui'
 
 const blank = { title: '', summary: '', description: '', level: 'Beginner-friendly', schedule: '', seats: 20, priceCents: 0, accent: '#1689ea', status: 'draft' }
 
 export default function AdminCourses() {
+  const { user } = useAuth()
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -34,13 +36,24 @@ export default function AdminCourses() {
   }
 
   const showStudents = async course => {
-    setStudents({ course, list: null })
+    setStudents({ course, list: null, available: [] })
     try {
-      const { students } = await api(`/courses/${course.id}/students`)
-      setStudents({ course, list: students })
+      const [{ students }, usersData] = await Promise.all([
+        api(`/courses/${course.id}/students`),
+        user.role === 'admin' ? api('/users?role=student&perPage=100') : Promise.resolve({ users: [] })
+      ])
+      const enrolledIds = new Set(students.map(student => student.id))
+      setStudents({ course, list: students, available: usersData.users.filter(student => !enrolledIds.has(student.id)), selectedUserId: '' })
     } catch (err) {
       setStudents({ course, list: [], error: err.message })
     }
+  }
+
+  const setAccess = async (course, student, paymentVerified) => {
+    try {
+      await api(`/courses/${course.id}/students/${student.id}`, { method: 'PATCH', body: { paymentVerified } })
+      setStudents(current => current && { ...current, list: current.list.map(item => item.id === student.id ? { ...item, paymentVerified } : item) })
+    } catch (err) { setError(err.message) }
   }
 
   return <div>
@@ -88,8 +101,27 @@ export default function AdminCourses() {
           : <ul className="space-y-3 text-sm">
             {students.list.map(student => <li key={student.id} className="flex items-center justify-between gap-3">
               <span className="min-w-0 truncate">{student.name} <span className="text-muted">· {student.email}</span></span>
+              <button className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold ${student.paymentVerified ? 'border-lime text-lime' : 'border-line text-muted'}`} onClick={() => setAccess(students.course, student, !student.paymentVerified)}>
+                {student.paymentVerified ? <Check size={14} /> : <Lock size={14} />} {student.paymentVerified ? 'Access allowed' : 'Allow recording access'}
+              </button>
             </li>)}
           </ul>}
+      {students.list && user.role === 'admin' && <div className="mt-6 border-t border-line pt-5">
+        <p className="text-sm font-semibold">Add a student after reviewing their form submission</p>
+        <div className="mt-3 flex gap-2">
+          <select className="field !mt-0 min-w-0 flex-1" value={students.selectedUserId || ''} onChange={event => setStudents(current => ({ ...current, selectedUserId: event.target.value }))}>
+            <option value="">Choose a student account</option>
+            {students.available.map(student => <option key={student.id} value={student.id}>{student.name} · {student.email}</option>)}
+          </select>
+          <button className="btn-primary shrink-0 px-4 py-2 text-sm" disabled={!students.selectedUserId} onClick={async () => {
+            try {
+              await api(`/courses/${students.course.id}/students`, { method: 'POST', body: { userId: Number(students.selectedUserId) } })
+              showStudents(students.course)
+            } catch (err) { setError(err.message) }
+          }}>Add</button>
+        </div>
+        <p className="mt-2 text-xs text-muted">New students start locked until you allow recording access.</p>
+      </div>}
     </Modal>}
   </div>
 }

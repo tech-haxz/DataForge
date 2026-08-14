@@ -199,8 +199,11 @@ function canWatch(user, video) {
   if (video.visibility === 'private') return { ok: false, status: 403, reason: 'This lesson is not published yet' }
   if (!video.course_id) return { ok: false, status: 403, reason: 'This lesson is not part of a course you can access' }
 
-  const enrolled = db.prepare('SELECT 1 FROM enrollments WHERE user_id = ? AND course_id = ?').get(user.id, video.course_id)
-  return enrolled ? { ok: true } : { ok: false, status: 403, reason: 'Enroll in this course to watch the lesson' }
+  const enrollment = db.prepare('SELECT payment_verified FROM enrollments WHERE user_id = ? AND course_id = ?').get(user.id, video.course_id)
+  if (!enrollment) return { ok: false, status: 403, reason: 'Enroll in this course to watch the lesson' }
+  return enrollment.payment_verified
+    ? { ok: true }
+    : { ok: false, status: 403, reason: 'Recording access is pending payment verification by an admin' }
 }
 
 function nextPosition(courseId) {

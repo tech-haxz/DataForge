@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   course_id  INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  payment_verified INTEGER NOT NULL DEFAULT 0,
   created_at TEXT    NOT NULL DEFAULT (datetime('now')),
   UNIQUE (user_id, course_id)
 );
@@ -104,6 +105,9 @@ try { db.exec("ALTER TABLE mentorship_requests ADD COLUMN phone TEXT NOT NULL DE
   if (!String(error.message).includes('duplicate column name')) throw error
 }
 try { db.exec("ALTER TABLE projects ADD COLUMN thumbnail TEXT") } catch (error) {
+  if (!String(error.message).includes('duplicate column name')) throw error
+}
+try { db.exec("ALTER TABLE enrollments ADD COLUMN payment_verified INTEGER NOT NULL DEFAULT 0") } catch (error) {
   if (!String(error.message).includes('duplicate column name')) throw error
 }
 
