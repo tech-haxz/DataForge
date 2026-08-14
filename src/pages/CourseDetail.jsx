@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CalendarDays, Lock, PlayCircle, Users } from 'lucide-react'
 import { api, formatDuration } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -8,11 +8,9 @@ import Reveal from '../components/Reveal'
 
 export default function CourseDetail() {
   const { slug } = useParams()
-  const navigate = useNavigate()
-  const { user, isStaff } = useAuth()
+  const { isStaff } = useAuth()
   const [state, setState] = useState({ loading: true, course: null, videos: [] })
   const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
 
   const load = useCallback(() => {
     api(`/courses/${slug}`)
@@ -22,25 +20,13 @@ export default function CourseDetail() {
 
   useEffect(load, [load])
 
-  const toggleEnrollment = async () => {
-    if (!user) return navigate('/login', { state: { from: `/courses/${slug}` } })
-    setBusy(true)
-    setError('')
-    try {
-      await api(`/courses/${state.course.id}/enroll`, { method: state.course.enrolled ? 'DELETE' : 'POST' })
-      load()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setBusy(false)
-    }
-  }
+  const reserveSeat = () => { window.location.href = 'https://forms.gle/wzWRpDrkdofpzX2k8' }
 
   if (state.loading) return <div className="container pb-24 pt-36 text-muted"><Spinner /> Loading course…</div>
   if (!state.course) return <div className="container pb-24 pt-36"><Alert>{error || 'Course not found'}</Alert></div>
 
   const { course, videos } = state
-  const price = course.priceCents ? `$${(course.priceCents / 100).toFixed(0)}` : 'Free'
+  const price = course.priceCents ? `₹${(course.priceCents).toFixed(0)}` : 'Free'
 
   return <div className="container pb-24 pt-36">
     <Link to="/courses" className="btn-ghost px-0 text-sm text-muted"><ArrowLeft size={15} /> All courses</Link>
@@ -66,10 +52,10 @@ export default function CourseDetail() {
           <div className="text-3xl font-bold tracking-tight">{price}</div>
           <p className="mt-2 text-sm text-muted">{course.videoCount} lessons · lifetime access to recordings</p>
           {error && <div className="mt-5"><Alert>{error}</Alert></div>}
-          <button className={`mt-6 w-full justify-center ${course.enrolled ? 'btn-ghost border border-line' : 'btn-primary'}`} onClick={toggleEnrollment} disabled={busy}>
-            {busy ? <Spinner /> : course.enrolled ? 'Leave this cohort' : user ? 'Reserve your seat' : 'Sign in to enroll'}
+          <button className="btn-primary mt-6 w-full justify-center" onClick={reserveSeat}>
+            Reserve your seat
           </button>
-          {course.enrolled && <p className="mt-4 text-center text-xs font-semibold text-lime">You are enrolled — every lesson below is unlocked.</p>}
+          {course.enrolled && <p className={`mt-4 text-center text-xs font-semibold ${course.paymentVerified ? 'text-lime' : 'text-muted'}`}>{course.paymentVerified ? 'Payment verified — recordings unlocked.' : 'Registration received — recording access is pending payment verification.'}</p>}
         </div>
       </Reveal>
     </div>

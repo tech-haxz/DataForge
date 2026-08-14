@@ -49,12 +49,13 @@ router.get('/:idOrSlug', asyncHandler(async (req, res) => {
   const isStaff = req.user && ['admin', 'instructor'].includes(req.user.role)
   if (row.status !== 'published' && !isStaff) throw ApiError.notFound('Course not found')
 
-  const enrolled = req.user
-    ? Boolean(db.prepare('SELECT 1 FROM enrollments WHERE user_id = ? AND course_id = ?').get(req.user.id, row.id))
-    : false
+  const enrollment = req.user
+    ? db.prepare('SELECT payment_verified FROM enrollments WHERE user_id = ? AND course_id = ?').get(req.user.id, row.id)
+    : null
+  const enrolled = Boolean(enrollment)
 
   // Locked lessons stay visible in the outline, but only unlocked ones can stream.
-  const canSeeAll = isStaff || enrolled
+  const canSeeAll = isStaff || enrollment?.payment_verified === 1
   const videos = db.prepare(`
     SELECT v.*, ${req.user ? 'p.seconds AS progress_seconds, p.completed' : 'NULL AS progress_seconds, 0 AS completed'}
     FROM videos v
@@ -64,7 +65,7 @@ router.get('/:idOrSlug', asyncHandler(async (req, res) => {
     .all(...(req.user ? [req.user.id] : []), row.id, isStaff ? 1 : 0)
     .map(v => ({ ...toVideo(v), locked: !(canSeeAll || v.visibility === 'public') }))
 
-  res.json({ course: { ...toCourse(row), enrolled }, videos })
+  res.json({ course: { ...toCourse(row), enrolled, paymentVerified: Boolean(enrollment?.payment_verified) }, videos })
 }))
 
 router.post('/', requireStaff, asyncHandler(async (req, res) => {
@@ -136,10 +137,28 @@ router.delete('/:id/enroll', requireAuth, asyncHandler(async (req, res) => {
 
 router.get('/:id/students', requireStaff, asyncHandler(async (req, res) => {
   const students = db.prepare(`
-    SELECT u.id, u.name, u.email, e.created_at
+    SELECT u.id, u.name, u.email, e.created_at, e.payment_verified
     FROM enrollments e JOIN users u ON u.id = e.user_id
     WHERE e.course_id = ? ORDER BY e.created_at DESC`).all(req.params.id)
-  res.json({ students: students.map(s => ({ id: s.id, name: s.name, email: s.email, enrolledAt: s.created_at })) })
+  res.json({ students: students.map(s => ({ id: s.id, name: s.name, email: s.email, enrolledAt: s.created_at, paymentVerified: Boolean(s.payment_verified) })) })
+}))
+
+router.post('/:id/students', requireAdmin, asyncHandler(async (req, res) => {
+  const course = db.prepare('SELECT id FROM courses WHERE id = ?').get(req.params.id)
+  if (!course) throw ApiError.notFound('Course not found')
+  const data = validate(req.body, { userId: { type: 'int', required: true, min: 1 } })
+  const student = db.prepare("SELECT id FROM users WHERE id = ? AND role = 'student'").get(data.userId)
+  if (!student) throw ApiError.badRequest('Select a student account')
+  db.prepare('INSERT OR IGNORE INTO enrollments (user_id, course_id, payment_verified) VALUES (?, ?, 0)').run(data.userId, course.id)
+  res.status(201).json({ ok: true })
+}))
+
+router.patch('/:id/students/:userId', requireAdmin, asyncHandler(async (req, res) => {
+  const data = validate(req.body, { paymentVerified: { type: 'boolean', required: true } })
+  const info = db.prepare('UPDATE enrollments SET payment_verified = ? WHERE course_id = ? AND user_id = ?')
+    .run(data.paymentVerified ? 1 : 0, req.params.id, req.params.userId)
+  if (!info.changes) throw ApiError.notFound('Enrollment not found')
+  res.json({ paymentVerified: data.paymentVerified })
 }))
 
 function uniqueSlug(base, ignoreId = 0) {
