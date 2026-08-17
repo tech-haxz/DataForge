@@ -12,8 +12,9 @@ import { uploadVideo } from '../middleware/upload.js'
 const router = Router()
 
 const withCourse = `
-  SELECT v.*, c.title AS course_title
-  FROM videos v LEFT JOIN courses c ON c.id = v.course_id`
+  SELECT v.*, c.title AS course_title, ch.title AS chapter_title
+  FROM videos v LEFT JOIN courses c ON c.id = v.course_id
+  LEFT JOIN course_chapters ch ON ch.id = v.chapter_id`
 
 const getVideo = id => db.prepare(`${withCourse} WHERE v.id = ?`).get(id)
 
@@ -57,6 +58,7 @@ router.post('/', requireStaff, uploadVideo, asyncHandler(async (req, res) => {
       title: { type: 'string', required: true, min: 2, max: 140 },
       description: { type: 'string', max: 2000 },
       courseId: { type: 'int', min: 1 },
+      chapterId: { type: 'int', min: 1 },
       visibility: { type: 'enum', values: ['public', 'enrolled', 'private'] },
       position: { type: 'int', min: 0, max: 999 },
       duration: { type: 'int', min: 0, max: 60 * 60 * 24 }
@@ -65,14 +67,18 @@ router.post('/', requireStaff, uploadVideo, asyncHandler(async (req, res) => {
     if (data.courseId && !db.prepare('SELECT 1 FROM courses WHERE id = ?').get(data.courseId)) {
       throw ApiError.badRequest('That course does not exist')
     }
+    if (data.chapterId && !db.prepare('SELECT 1 FROM course_chapters WHERE id = ? AND course_id = ?').get(data.chapterId, data.courseId)) {
+      throw ApiError.badRequest('That chapter does not belong to the selected course')
+    }
 
     const info = db.prepare(`
-      INSERT INTO videos (title, description, course_id, filename, original_name, mime_type, size_bytes, duration, thumbnail, visibility, position, uploaded_by)
-      VALUES (@title, @description, @course_id, @filename, @original_name, @mime_type, @size_bytes, @duration, @thumbnail, @visibility, @position, @uploaded_by)`)
+      INSERT INTO videos (title, description, course_id, chapter_id, filename, original_name, mime_type, size_bytes, duration, thumbnail, visibility, position, uploaded_by)
+      VALUES (@title, @description, @course_id, @chapter_id, @filename, @original_name, @mime_type, @size_bytes, @duration, @thumbnail, @visibility, @position, @uploaded_by)`)
       .run({
         title: data.title,
         description: data.description ?? '',
         course_id: data.courseId ?? null,
+        chapter_id: data.chapterId ?? null,
         filename: file.filename,
         original_name: file.originalname,
         mime_type: file.mimetype,
@@ -101,17 +107,19 @@ router.patch('/:id', requireStaff, asyncHandler(async (req, res) => {
     title: { type: 'string', min: 2, max: 140 },
     description: { type: 'string', max: 2000 },
     courseId: { type: 'int', min: 0 },
+    chapterId: { type: 'int', min: 0 },
     visibility: { type: 'enum', values: ['public', 'enrolled', 'private'] },
     position: { type: 'int', min: 0, max: 999 }
   })
 
-  const columns = { title: 'title', description: 'description', courseId: 'course_id', visibility: 'visibility', position: 'position' }
+  if (data.chapterId && !db.prepare('SELECT 1 FROM course_chapters WHERE id = ? AND course_id = ?').get(data.chapterId, data.courseId)) throw ApiError.badRequest('That chapter does not belong to the selected course')
+  const columns = { title: 'title', description: 'description', courseId: 'course_id', chapterId: 'chapter_id', visibility: 'visibility', position: 'position' }
   const sets = []
   const params = []
   for (const [key, column] of Object.entries(columns)) {
     if (data[key] === undefined) continue
     sets.push(`${column} = ?`)
-    params.push(key === 'courseId' && !data[key] ? null : data[key])
+    params.push(['courseId', 'chapterId'].includes(key) && !data[key] ? null : data[key])
   }
   if (!sets.length) throw ApiError.badRequest('Nothing to update')
 

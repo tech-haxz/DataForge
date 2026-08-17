@@ -4,6 +4,7 @@ export const toCourse = row => row && {
   slug: row.slug,
   summary: row.summary,
   description: row.description,
+  syllabus: row.syllabus ?? '',
   level: row.level,
   schedule: row.schedule,
   seats: row.seats,
@@ -21,6 +22,8 @@ export const toVideo = row => row && {
   title: row.title,
   description: row.description,
   courseId: row.course_id,
+  chapterId: row.chapter_id ?? null,
+  chapterTitle: row.chapter_title ?? null,
   courseTitle: row.course_title ?? null,
   originalName: row.original_name,
   mimeType: row.mime_type,
@@ -32,6 +35,15 @@ export const toVideo = row => row && {
   createdAt: row.created_at,
   ...(row.progress_seconds !== undefined ? { progressSeconds: row.progress_seconds || 0, completed: Boolean(row.completed) } : {})
 }
+
+export const toChapter = row => row && ({
+  id: row.id,
+  courseId: row.course_id,
+  title: row.title,
+  description: row.description,
+  position: row.position,
+  videoCount: row.video_count ?? 0
+})
 
 export const toProject = row => row && {
   id: row.id,

@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS courses (
   slug        TEXT    NOT NULL UNIQUE,
   summary     TEXT    NOT NULL DEFAULT '',
   description TEXT    NOT NULL DEFAULT '',
+  syllabus    TEXT    NOT NULL DEFAULT '',
   level       TEXT    NOT NULL DEFAULT 'Beginner-friendly',
   schedule    TEXT    NOT NULL DEFAULT '',
   seats       INTEGER NOT NULL DEFAULT 20,
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS videos (
   title          TEXT    NOT NULL,
   description    TEXT    NOT NULL DEFAULT '',
   course_id      INTEGER REFERENCES courses(id) ON DELETE SET NULL,
+  chapter_id     INTEGER REFERENCES course_chapters(id) ON DELETE SET NULL,
   filename       TEXT    NOT NULL,
   original_name  TEXT    NOT NULL DEFAULT '',
   mime_type      TEXT    NOT NULL DEFAULT 'video/mp4',
@@ -49,6 +51,15 @@ CREATE TABLE IF NOT EXISTS videos (
   position       INTEGER NOT NULL DEFAULT 0,
   uploaded_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS course_chapters (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  course_id   INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  title       TEXT    NOT NULL,
+  description TEXT    NOT NULL DEFAULT '',
+  position    INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS enrollments (
@@ -95,6 +106,7 @@ CREATE TABLE IF NOT EXISTS mentorship_requests (
 );
 
 CREATE INDEX IF NOT EXISTS idx_videos_course      ON videos(course_id);
+CREATE INDEX IF NOT EXISTS idx_chapters_course   ON course_chapters(course_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_user   ON enrollments(user_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_course ON enrollments(course_id);
 CREATE INDEX IF NOT EXISTS idx_requests_status    ON mentorship_requests(status);
@@ -107,6 +119,13 @@ try { db.exec("ALTER TABLE mentorship_requests ADD COLUMN phone TEXT NOT NULL DE
 try { db.exec("ALTER TABLE projects ADD COLUMN thumbnail TEXT") } catch (error) {
   if (!String(error.message).includes('duplicate column name')) throw error
 }
+try { db.exec("ALTER TABLE courses ADD COLUMN syllabus TEXT NOT NULL DEFAULT ''") } catch (error) {
+  if (!String(error.message).includes('duplicate column name')) throw error
+}
+try { db.exec("ALTER TABLE videos ADD COLUMN chapter_id INTEGER REFERENCES course_chapters(id) ON DELETE SET NULL") } catch (error) {
+  if (!String(error.message).includes('duplicate column name')) throw error
+}
+db.exec('CREATE INDEX IF NOT EXISTS idx_videos_chapter ON videos(chapter_id)')
 try { db.exec("ALTER TABLE enrollments ADD COLUMN payment_verified INTEGER NOT NULL DEFAULT 0") } catch (error) {
   if (!String(error.message).includes('duplicate column name')) throw error
 }

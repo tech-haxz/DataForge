@@ -5,7 +5,7 @@ import { api } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { Alert, EmptyState, Field, Modal, Spinner, StatusPill } from '../../components/ui'
 
-const blank = { title: '', summary: '', description: '', level: 'Beginner-friendly', schedule: '', seats: 20, priceCents: 0, accent: '#1689ea', status: 'draft' }
+const blank = { title: '', summary: '', description: '', syllabus: '', level: 'Beginner-friendly', schedule: '', seats: 20, priceCents: 0, accent: '#1689ea', status: 'draft' }
 
 export default function AdminCourses() {
   const { user } = useAuth()
@@ -120,7 +120,7 @@ export default function AdminCourses() {
             } catch (err) { setError(err.message) }
           }}>Add</button>
         </div>
-        <p className="mt-2 text-xs text-muted">New students start locked until you allow recording access.</p>
+        <p className="mt-2 text-xs text-muted">Students added here are enrolled and recordings are unlocked immediately. Self-registrations remain locked until approved.</p>
       </div>}
     </Modal>}
   </div>
@@ -131,6 +131,12 @@ function CourseForm({ course, onClose, onSaved }) {
   const [error, setError] = useState('')
   const [details, setDetails] = useState({})
   const [busy, setBusy] = useState(false)
+  const [chapterText, setChapterText] = useState('')
+
+  useEffect(() => {
+    if (!course.id) return
+    api(`/courses/${course.id}/chapters`).then(({ chapters }) => setChapterText(chapters.map(chapter => `${chapter.title}${chapter.description ? ` | ${chapter.description}` : ''}`).join('\n'))).catch(() => {})
+  }, [course.id])
 
   const set = key => event => setForm(f => ({ ...f, [key]: event.target.value }))
 
@@ -143,6 +149,7 @@ function CourseForm({ course, onClose, onSaved }) {
       title: form.title,
       summary: form.summary,
       description: form.description,
+      syllabus: form.syllabus,
       level: form.level,
       schedule: form.schedule,
       seats: Number(form.seats) || 0,
@@ -151,8 +158,14 @@ function CourseForm({ course, onClose, onSaved }) {
       status: form.status
     }
     try {
-      if (course.id) await api(`/courses/${course.id}`, { method: 'PATCH', body })
-      else await api('/courses', { method: 'POST', body })
+      const result = course.id ? await api(`/courses/${course.id}`, { method: 'PATCH', body }) : await api('/courses', { method: 'POST', body })
+      const courseId = result.course.id
+      const lines = chapterText.split('\n').map(line => line.trim()).filter(Boolean).map(line => { const [title, ...description] = line.split('|'); return { title: title.trim(), description: description.join('|').trim() } })
+      if (course.id) {
+        const { chapters } = await api(`/courses/${course.id}/chapters`)
+        await Promise.all(chapters.map(chapter => api(`/courses/${course.id}/chapters/${chapter.id}`, { method: 'DELETE' })))
+      }
+      for (const [position, chapter] of lines.entries()) await api(`/courses/${courseId}/chapters`, { method: 'POST', body: { ...chapter, position } })
       onSaved()
     } catch (err) {
       setError(err.message)
@@ -173,6 +186,12 @@ function CourseForm({ course, onClose, onSaved }) {
       </Field>
       <Field label="Description" error={details.description}>
         <textarea className="field min-h-24 resize-none" value={form.description} onChange={set('description')} />
+      </Field>
+      <Field label="Syllabus" hint="optional · overview shown to students" error={details.syllabus}>
+        <textarea className="field min-h-24 resize-none" value={form.syllabus} onChange={set('syllabus')} placeholder="What students will learn in this course…" />
+      </Field>
+      <Field label="Chapters" hint="one per line: Chapter title | short description">
+        <textarea className="field min-h-28 resize-none" value={chapterText} onChange={event => setChapterText(event.target.value)} placeholder={'Foundations | Core concepts\nBuilding the project | Guided implementation'} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Level" error={details.level}><input className="field" value={form.level} onChange={set('level')} /></Field>

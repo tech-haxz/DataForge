@@ -14,7 +14,10 @@ export default function AdminVideos() {
   const load = () => {
     setLoading(true)
     Promise.all([api('/videos'), api('/courses?status=all')])
-      .then(([v, c]) => { setVideos(v.videos); setCourses(c.courses) })
+      .then(async ([v, c]) => {
+        const detail = await Promise.all(c.courses.map(course => api(`/courses/${course.id}`)))
+        setVideos(v.videos); setCourses(c.courses.map((course, index) => ({ ...course, chapters: detail[index].chapters || [] })))
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }
@@ -74,7 +77,7 @@ function UploadCard({ courses, onUploaded }) {
   const fileInput = useRef(null)
   const [file, setFile] = useState(null)
   const [thumbnail, setThumbnail] = useState(null)
-  const [form, setForm] = useState({ title: '', description: '', courseId: '', visibility: 'enrolled' })
+  const [form, setForm] = useState({ title: '', description: '', courseId: '', chapterId: '', visibility: 'enrolled' })
   const [duration, setDuration] = useState(0)
   const [progress, setProgress] = useState(null)
   const [status, setStatus] = useState(null)
@@ -112,6 +115,7 @@ function UploadCard({ courses, onUploaded }) {
     data.append('description', form.description)
     data.append('visibility', form.visibility)
     if (form.courseId) data.append('courseId', form.courseId)
+    if (form.chapterId) data.append('chapterId', form.chapterId)
     if (duration) data.append('duration', String(duration))
 
     setStatus(null)
@@ -120,7 +124,7 @@ function UploadCard({ courses, onUploaded }) {
     try {
       await uploadVideo(data, { onProgress: setProgress })
       setStatus({ kind: 'success', message: `“${form.title}” is live.` })
-      setForm({ title: '', description: '', courseId: form.courseId, visibility: form.visibility })
+      setForm({ title: '', description: '', courseId: form.courseId, chapterId: form.chapterId, visibility: form.visibility })
       setFile(null)
       setThumbnail(null)
       setDuration(0)
@@ -171,6 +175,12 @@ function UploadCard({ courses, onUploaded }) {
           {courses.map(course => <option key={course.id} value={course.id}>{course.title}</option>)}
         </select>
       </Field>
+      <Field label="Chapter" hint="optional · keeps recordings in syllabus order" error={details.chapterId}>
+        <select className="field" value={form.chapterId} onChange={set('chapterId')} disabled={!form.courseId}>
+          <option value="">No chapter</option>
+          {courses.find(course => String(course.id) === String(form.courseId))?.chapters?.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.title}</option>)}
+        </select>
+      </Field>
       <Field label="Who can watch" error={details.visibility}>
         <select className="field" value={form.visibility} onChange={set('visibility')}>
           <option value="enrolled">Enrolled students</option>
@@ -202,6 +212,7 @@ function EditVideo({ video, courses, onClose, onSaved }) {
     title: video.title,
     description: video.description,
     courseId: video.courseId ?? '',
+    chapterId: video.chapterId ?? '',
     visibility: video.visibility,
     position: video.position
   })
@@ -223,6 +234,7 @@ function EditVideo({ video, courses, onClose, onSaved }) {
           title: form.title,
           description: form.description,
           courseId: form.courseId === '' ? 0 : Number(form.courseId),
+          chapterId: form.chapterId === '' ? 0 : Number(form.chapterId),
           visibility: form.visibility,
           position: Number(form.position) || 0
         }
@@ -256,6 +268,7 @@ function EditVideo({ video, courses, onClose, onSaved }) {
           </select>
         </Field>
       </div>
+      <Field label="Chapter" error={details.chapterId}><select className="field" value={form.chapterId} onChange={set('chapterId')} disabled={!form.courseId}><option value="">No chapter</option>{courses.find(course => String(course.id) === String(form.courseId))?.chapters?.map(chapter => <option key={chapter.id} value={chapter.id}>{chapter.title}</option>)}</select></Field>
       <Field label="Position in course" hint="lower shows first" error={details.position}>
         <input className="field" type="number" min="0" value={form.position} onChange={set('position')} />
       </Field>
